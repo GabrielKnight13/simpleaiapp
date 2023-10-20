@@ -4,12 +4,10 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QLabel, QVBoxLayout, QWidget, QPushButton, QLineEdit
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import QTimer, QThread, pyqtSignal
-
 import os
 import openai
 from gtts import gTTS
 from audioplayer import AudioPlayer
-
 import threading as th
 
 #Api key and language
