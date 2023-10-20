@@ -108,7 +108,7 @@ class MainWindow(QMainWindow):
             if os.path.exists("/response.mp3"):
                 self.audio = AudioPlayer("/response.mp3")
                 self.audio.close()
-                os.remove("C:/Users/onur/Desktop/response.mp3")
+                os.remove("/response.mp3")
           
             myobj = gTTS(text=self.response, lang=language)
             myobj.save("/response.mp3")
