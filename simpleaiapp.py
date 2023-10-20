@@ -1,13 +1,15 @@
-#Simple Open AI Application 
-#libraries
+#Simple Open AI Interface 
+#Import libraries
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QLabel, QVBoxLayout, QWidget, QPushButton, QLineEdit
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import QTimer, QThread, pyqtSignal
+
 import os
 import openai
 from gtts import gTTS
 from audioplayer import AudioPlayer
+
 import threading as th
 
 #Api key and language
@@ -37,7 +39,6 @@ class MainWindow(QMainWindow):
         self.button_listen = QPushButton("Listen")
         self.button_pause_resume = QPushButton("Pause/Resume")
         self.button_stop = QPushButton("Stop")
-        self.button_exit = QPushButton("Exit")
 
         self.label = QLabel("Welcome!")
        
@@ -46,7 +47,6 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.button_listen)
         layout.addWidget(self.button_pause_resume)
         layout.addWidget(self.button_stop)
-        layout.addWidget(self.button_exit)
 
         layout.addWidget(self.label_content)
         layout.addWidget(self.label)
@@ -59,7 +59,6 @@ class MainWindow(QMainWindow):
         self.button_listen.clicked.connect(self.listen_pressed)
         self.button_pause_resume.clicked.connect(self.pause_resume_pressed)
         self.button_stop.clicked.connect(self.stop_pressed)
-        self.button_exit.clicked.connect(self.exit_pressed)
 
         self.button_count_play = 0
         self.button_pause_resume_count = 0
@@ -163,16 +162,10 @@ class MainWindow(QMainWindow):
             self.audio.close()
             os.remove("/response.mp3") 
 
-    #Exit button pressed method
-    def exit_pressed(self, event):
-        t5 = th.Timer(1, self.close_th)
-        t5.start() 
-        window.close()
-
     #Close method  
     def closeEvent(self, event):        
-        t6 = th.Timer(1, self.close_th)
-        t6.start()       
+        t5 = th.Timer(1, self.close_th)
+        t5.start()       
         window.close()
         
 if __name__ == "__main__":
