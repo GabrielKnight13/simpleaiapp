@@ -171,8 +171,8 @@ class MainWindow(QMainWindow):
 
     #Close method  
     def closeEvent(self, event):        
-        t4 = th.Timer(1, self.close_th)
-        t4.start()       
+        t6 = th.Timer(1, self.close_th)
+        t6.start()       
         window.close()
         
 if __name__ == "__main__":
