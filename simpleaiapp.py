@@ -1,4 +1,5 @@
-#Simple Open AI Qt Application with gTTS
+#Simple Open AI Application 
+#libraries
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QLabel, QVBoxLayout, QWidget, QPushButton, QLineEdit
 from PyQt5 import QtCore, QtWidgets
@@ -10,10 +11,9 @@ from gtts import gTTS
 from audioplayer import AudioPlayer
 
 import threading as th
-from time import sleep
 
 #Api key and language
-openai.api_key = "sk-..."
+openai.api_key = "sk-"
 language = 'en'
 
 #Main GUI
@@ -21,6 +21,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.initUI()
+
     #Init GUI
     def initUI(self):
         self.label_content = QtWidgets.QLabel(
@@ -34,16 +35,21 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
    
         self.text_input = QLineEdit()
-        button = QPushButton("Submit")
-        button2 = QPushButton("Listen")
-        button3 = QPushButton("Exit")
+        self.button_submit = QPushButton("Submit")
+        self.button_listen = QPushButton("Listen")
+        self.button_pause_resume = QPushButton("Pause/Resume")
+        self.button_stop = QPushButton("Stop")
+        self.button_exit = QPushButton("Exit")
 
         self.label = QLabel("Welcome!")
        
         layout.addWidget(self.text_input)
-        layout.addWidget(button)
-        layout.addWidget(button2)
-        layout.addWidget(button3)
+        layout.addWidget(self.button_submit)
+        layout.addWidget(self.button_listen)
+        layout.addWidget(self.button_pause_resume)
+        layout.addWidget(self.button_stop)
+        layout.addWidget(self.button_exit)
+
         layout.addWidget(self.label_content)
         layout.addWidget(self.label)
 
@@ -51,17 +57,15 @@ class MainWindow(QMainWindow):
         widget.setLayout(layout)
         self.setCentralWidget(widget)
 
-        button.clicked.connect(self.process_)
-       
-        button2.clicked.connect(self.listen_pressed)
-        button3.clicked.connect(self.closeEvent)
+        self.button_submit.clicked.connect(self.submit_pressed)   
+        self.button_listen.clicked.connect(self.listen_pressed)
+        self.button_pause_resume.clicked.connect(self.pause_resume_pressed)
+        self.button_stop.clicked.connect(self.stop_pressed)
+        self.button_exit.clicked.connect(self.exit_pressed)
 
-        self.isplaying = False
-        
-    #Processing thread
-    def processing_th(self):
-        self.label.setText("Processing...")
-        
+        self.button_count_play = 0
+        self.button_pause_resume_count = 0
+
     #Open AI get completion method      
     def get_completion(self, prompt, model="gpt-3.5-turbo"):
         messages = [{"role": "user", "content": prompt}]
@@ -70,71 +74,109 @@ class MainWindow(QMainWindow):
           messages=messages,
           temperature=0
         )
-        return response.choices[0].message["content"]   
-    
+        return response.choices[0].message["content"]
+
     #Done thread
     def done_(self):
         self.label.setText("Done.")
-    
-    #Process with Submit Button Pressed
-    def process_(self):
-        t1 = th.Timer(0.3, self.processing_th)
+
+    #Processing thread     
+    def processing_th(self):
+        self.label.setText("Processing...") 
+
+    #Submit Button Pressed
+    def submit_pressed(self):
+        t1 = th.Timer(0.5, self.processing_th)
         t1.start()
-        #Main process activated 1 s after processing thread
-        t3 = th.Timer(1, self.main_process)
-        t3.start()
-        
+        t2 = th.Timer(0.5, self.main_process)
+        t2.start()  
+
     #Main Process routed by Submit Pressed
     def main_process(self):
         self.prompt = self.text_input.text()
         self.response = self.get_completion(self.prompt)
-        self.label_content.setText(self.response)    
-    
-        t2 = th.Timer(0.1,self.done_)
-        t2.start()
-        
-    #Listen thread
-    def listen_th(self):
-        self.label.setText("AI Speaks...")
-         
-    #AI Speech thread with gTTS and Audio player
-    def speech_ai_th(self):
-        myobj = gTTS(text=self.response, lang=language)
-        myobj.save("path//response.mp3")
-        self.audio = AudioPlayer("path//response.mp3")
-        self.audio.play(block=True)
-        self.audio.close()
-        os.remove("path//response.mp3") 
-        self.isplaying = False
+        self.label_content.setText(self.response)
 
-        t2 = th.Timer(0.1,self.done_)
-        t2.start() 
-    
-    #AI speech method which is activated by listen button pressed   
-    def listen_pressed(self):   
+        t3 = th.Timer(0.5,self.done_)
+        t3.start()
+
+    #AI speaking thread
+    def listen_th(self):
+        self.label.setText("AI Speaking...") 
+
+    #AI speaking process
+    def listen_pressed(self):
         try: 
-            if not self.isplaying:
-                t4 = th.Timer(1,self.listen_th)
+            if os.path.exists("/response.mp3"):
+                self.audio = AudioPlayer("/response.mp3")
+                self.audio.close()
+                os.remove("C:/Users/onur/Desktop/response.mp3")
+          
+            myobj = gTTS(text=self.response, lang=language)
+            myobj.save("/response.mp3")
+
+            self.button_count_play = 0
+
+            if self.button_count_play == 0:
+                self.audio = AudioPlayer("/response.mp3")
+
+            self.button_count_play += 1
+
+            if self.button_count_play >= 1:
+                self.audio.play(block=False)
+                t4 = th.Timer(0.3, self.listen_th)
                 t4.start()
-                self.isplaying = True
-            if self.isplaying:
-                t5 = th.Timer(1,self.speech_ai_th)
-                t5.start()                    
+
         except AttributeError:
-            self.label_content.setText("Error! Try Again with right prompt")
+            self.label_content.setText("Nothing to speak.")
             self.label_content.show()
-            
+
+    #Pause & Resume pressed method           
+    def pause_resume_pressed(self):
+        try:
+            self.button_pause_resume_count += 1
+
+            if self.button_pause_resume_count == 1:
+                self.audio.pause()
+                self.label.setText("AI Speech Paused.") 
+
+            elif self.button_pause_resume_count == 2:
+                self.audio.resume()
+                self.label.setText("AI Speech Resumed.")  
+                self.button_pause_resume_count = 0
+
+        except AttributeError:
+            self.label_content.setText("Nothing to pause or resume.")
+            self.label_content.show()
+
+    #Stop button pressed method
+    def stop_pressed(self):
+        try: 
+            self.audio.stop()
+            self.label.setText("AI Speech Stopped.")
+        except AttributeError:
+            self.label_content.setText("Nothing to stop.")
+            self.label_content.show()
+
     #Close thread
     def close_th(self):
-        self.isplaying = False 
-        self.audio.close()
-        
-    #Close method    
-    def closeEvent(self, event):        
-        t6 = th.Timer(1, self.close_th)
-        t6.start()        
+        if os.path.exists("/response.mp3"):
+            self.audio = AudioPlayer("/response.mp3")
+            self.audio.close()
+            os.remove("/response.mp3") 
+
+    #Exit button pressed method
+    def exit_pressed(self, event):
+        t5 = th.Timer(1, self.close_th)
+        t5.start() 
         window.close()
 
+    #Close method  
+    def closeEvent(self, event):        
+        t4 = th.Timer(1, self.close_th)
+        t4.start()       
+        window.close()
+        
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
